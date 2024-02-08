@@ -13,6 +13,10 @@ type Config struct {
 	DBPort         string `mapstructure:"POSTGRES_PORT"`
 	ServerPort     string `mapstructure:"PORT"`
 	ClientOrigin   string `mapstructure:"CLIENT_ORIGIN"`
+
+	GoogleClientID         string `mapstructure:"GOOGLE_CLIENT_ID"`
+	GoogleClientSecret     string `mapstructure:"GOOGLE_SECRET_KEY"`
+	GoogleOAuthRedirectUrl string `mapstructure:"GOOGLE_REDIRECT_URL"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

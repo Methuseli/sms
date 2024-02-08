@@ -1,7 +1,9 @@
 package main
 
 import (
-	"log"
+	"os"
+
+	Log "github.com/sirupsen/logrus"
 
 	"github.com/Methuseli/sms/database"
 	"github.com/Methuseli/sms/environment"
@@ -17,22 +19,29 @@ var (
 	server *gin.Engine
 )
 
+
 func init() {
+
+	Log.SetFormatter(&Log.JSONFormatter{})
+	Log.SetLevel(Log.DebugLevel)
+	Log.SetOutput(os.Stdout)
+
 	config, err := environment.LoadConfig(".")
 	if err != nil {
-		log.Fatal("🚀 Could not load environment variables", err)
+		Log.Fatal("🚀 Could not load environment variables", err)
 	}
 
 	database.ConnectDB(&config)
 	database.Database.AutoMigrate(&models.User{})
 
-	server = gin.Default()
+	server = gin.New()
+	server.Use(gin.LoggerWithWriter(Log.New().Writer()), gin.Recovery())
 }
 
 func main() {
 	config, err := environment.LoadConfig(".")
 	if err != nil {
-		log.Fatal("🚀 Could not load environment variables", err)
+		Log.Fatal("🚀 Could not load environment variables", err)
 	}
 
 	corsConfig := cors.DefaultConfig()
@@ -43,9 +52,11 @@ func main() {
 	server.Use(middleware.SessionMiddleware)
 
 	router := server.Group("/api/v1")
+	defaultRouter := server.Group("")
 
 	routes.DefaultRoutes(router)
 	routes.UserRoutes(router)
+	routes.OAuthRoutes(defaultRouter)
 
-	log.Fatal(server.Run(":" + config.ServerPort))
+	Log.Fatal(server.Run(":" + config.ServerPort))
 }
