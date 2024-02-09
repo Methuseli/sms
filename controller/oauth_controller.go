@@ -69,7 +69,7 @@ func GoogleOAuth(context *gin.Context) {
 		HttpOnly: true,
 	})
 
-	context.JSON(http.StatusOK, gin.H{"message": "Successfully logged in..."})
+	context.JSON(http.StatusOK, gin.H{"status": "success", "message": "Successfully logged in..."})
 }
 
 func GoogleOAuthRedirect(context *gin.Context) {

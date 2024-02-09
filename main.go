@@ -1,7 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"os"
+
+	"github.com/casbin/casbin/v2"
+	gormadapter "github.com/casbin/gorm-adapter/v3"
 
 	Log "github.com/sirupsen/logrus"
 
@@ -19,9 +23,12 @@ var (
 	server *gin.Engine
 )
 
+var enforcer *casbin.Enforcer
+
+var config *environment.Config
+
 
 func init() {
-
 	Log.SetFormatter(&Log.JSONFormatter{})
 	Log.SetLevel(Log.DebugLevel)
 	Log.SetOutput(os.Stdout)
@@ -34,15 +41,14 @@ func init() {
 	database.ConnectDB(&config)
 	database.Database.AutoMigrate(&models.User{})
 
+
+	adapter, err := gormadapter.NewAdapterByDB(database.Database)
+    if err != nil {
+        Log.Fatal(fmt.Sprintf("failed to initialize casbin adapter: %v", err))
+    }
+
 	server = gin.New()
 	server.Use(gin.LoggerWithWriter(Log.New().Writer()), gin.Recovery())
-}
-
-func main() {
-	config, err := environment.LoadConfig(".")
-	if err != nil {
-		Log.Fatal("🚀 Could not load environment variables", err)
-	}
 
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"http://localhost:8000", config.ClientOrigin}
@@ -55,8 +61,15 @@ func main() {
 	defaultRouter := server.Group("")
 
 	routes.DefaultRoutes(router)
-	routes.UserRoutes(router)
-	routes.OAuthRoutes(defaultRouter)
+	routes.UserRoutes(router, adapter)
+	routes.OAuthRoutes(defaultRouter, adapter)
+}
+
+func main() {
+	config, err := environment.LoadConfig(".")
+	if err != nil {
+		Log.Fatal("🚀 Could not load environment variables", err)
+	}
 
 	Log.Fatal(server.Run(":" + config.ServerPort))
 }

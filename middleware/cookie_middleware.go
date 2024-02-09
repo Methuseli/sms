@@ -26,7 +26,7 @@ func SessionMiddleware(c *gin.Context) {
     })
 
     if err != nil || !jwtToken.Valid {
-        c.AbortWithStatus(http.StatusUnauthorized)
+        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "invalid session"})
         return
     }
 
@@ -35,14 +35,14 @@ func SessionMiddleware(c *gin.Context) {
 
         token, err := c.Cookie("token")
         if err != nil {
-            c.AbortWithStatus(http.StatusUnauthorized)
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "error validating authentication token"})
         }
         authenticationToken, err := jwt.ParseWithClaims(token, &jwt.StandardClaims{}, func(accessToken *jwt.Token)(interface{}, error){
             return []byte(os.Getenv("JWT_SECRET_KEY")), nil
         })
 
         if err != nil || !authenticationToken.Valid {
-            c.AbortWithStatus(http.StatusUnauthorized)
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "user not authenticated"})
             return
         }
     }
@@ -54,7 +54,7 @@ func CreateSessionCookie(c *gin.Context) string {
     // Generate a unique session ID or use a library
     sessionID, err := GenerateRandomSessionID()
     if err != nil {
-        c.AbortWithStatus(http.StatusUnauthorized)
+        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "error authentication user"})
         return ""
     }
 

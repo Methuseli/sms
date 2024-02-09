@@ -5,9 +5,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Methuseli/sms/database"
 	"github.com/Methuseli/sms/models"
 	"github.com/Methuseli/sms/utilities"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func Register(context *gin.Context) {
@@ -31,42 +33,42 @@ func Register(context *gin.Context) {
 
 	savedUser, err := user.Save()
 
-	if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique constraint \"users_username_key\""){
-		context.JSON(http.StatusConflict, gin.H{"error": "user with the same username already exists"})
+	if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique constraint \"users_username_key\"") {
+		context.JSON(http.StatusConflict, gin.H{"status": "fail", "message": "user with the same username already exists"})
 		return
-	} else if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique constraint \"users_email_key\""){
-		context.JSON(http.StatusConflict, gin.H{"error": "user with the same email already exists"})
+	} else if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique constraint \"users_email_key\"") {
+		context.JSON(http.StatusConflict, gin.H{"status": "fail", "message": "user with the same email already exists"})
 		return
-	} else if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique constraint \"users_phonenumber_key\""){
-		context.JSON(http.StatusConflict, gin.H{"error": "user with the same phonenumber already exists"})
+	} else if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique constraint \"users_phonenumber_key\"") {
+		context.JSON(http.StatusConflict, gin.H{"status": "fail", "message": "user with the same phonenumber already exists"})
 		return
 	} else if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Something went wrong"})
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Something went wrong"})
 		return
 	}
 
-	context.JSON(http.StatusCreated, gin.H{"user": savedUser})
+	context.JSON(http.StatusCreated, gin.H{"status": "success", "user": savedUser, "message": "Successfully registered"})
 }
 
 func Login(context *gin.Context) {
 	var input models.AuthenticationInput
 
 	if err := context.ShouldBindJSON(&input); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
 
 	user, err := models.FindUserByUsername(input.Username)
 
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
 
 	err = user.ValidatePassword(input.Password)
 
 	if err != nil {
-		context.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		context.JSON(http.StatusForbidden, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
 
@@ -80,9 +82,52 @@ func Login(context *gin.Context) {
 		HttpOnly: true,
 	})
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
 
-	context.JSON(http.StatusOK, gin.H{"message": "Successfully logged in..."})
+	context.JSON(http.StatusOK, gin.H{"status": "success", "message": "Successfully logged in..."})
+}
+
+func GetAllUsers(context *gin.Context) {
+	var users []models.User
+
+	query := database.Database.Model(&models.User{})
+
+	if err := query.Find(&users); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"status": "fail", "message": "Failed to fetch users"})
+		return
+	}
+	context.JSON(http.StatusOK, users)
+}
+
+func EditUser(context *gin.Context) {
+	userId := context.Param("id")
+	id, err := uuid.Parse(userId)
+
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Invalid user ID"})
+		return
+	}
+
+	var updateFields map[string]interface{}
+	if err := context.BindJSON(&updateFields); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"status":"fail", "message": "Invalid JSON"})
+		return
+	}
+
+	var user models.User
+	result := database.Database.First(&user, id)
+	if result.Error != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Invalid user ID"})
+		return
+	}
+
+	if err := database.Database.Model(user).Updates(updateFields).Error; err != nil {
+		// Handle error (e.g., database error)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"status":"success", "user": user})
 }
