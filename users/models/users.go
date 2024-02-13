@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/Methuseli/sms/database"
+	"github.com/Methuseli/sms/users/database"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"

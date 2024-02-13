@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Methuseli/sms/models"
+	"github.com/Methuseli/sms/users/models"
 	"github.com/golang-jwt/jwt"
 )
 

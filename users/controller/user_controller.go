@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Methuseli/sms/database"
-	"github.com/Methuseli/sms/models"
-	"github.com/Methuseli/sms/utilities"
+	"github.com/Methuseli/sms/users/database"
+	"github.com/Methuseli/sms/users/models"
+	"github.com/Methuseli/sms/users/utilities"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	Log "github.com/sirupsen/logrus"

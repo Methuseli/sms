@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/Methuseli/sms/controller"
-	"github.com/Methuseli/sms/middleware"
+	"github.com/Methuseli/sms/users/controller"
+	"github.com/Methuseli/sms/users/middleware"
 	"github.com/casbin/gorm-adapter/v3"
 	"github.com/gin-gonic/gin"
 )

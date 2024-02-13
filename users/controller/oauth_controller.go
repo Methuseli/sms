@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Methuseli/sms/database"
-	"github.com/Methuseli/sms/environment"
-	"github.com/Methuseli/sms/models"
-	"github.com/Methuseli/sms/utilities"
+	"github.com/Methuseli/sms/users/database"
+	"github.com/Methuseli/sms/users/environment"
+	"github.com/Methuseli/sms/users/models"
+	"github.com/Methuseli/sms/users/utilities"
 	"github.com/gin-gonic/gin"
 	Log "github.com/sirupsen/logrus"
 )

@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/Methuseli/sms/environment"
+	"github.com/Methuseli/sms/users/environment"
 	Log "github.com/sirupsen/logrus"
 )
 

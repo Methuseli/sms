@@ -1,4 +1,4 @@
-module github.com/Methuseli/sms
+module github.com/Methuseli/sms/users
 
 go 1.21.5
 

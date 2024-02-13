@@ -9,14 +9,14 @@ import (
 
 	Log "github.com/sirupsen/logrus"
 
-	"github.com/Methuseli/sms/database"
-	"github.com/Methuseli/sms/environment"
-	"github.com/Methuseli/sms/middleware"
-	"github.com/Methuseli/sms/models"
+	"github.com/Methuseli/sms/users/database"
+	"github.com/Methuseli/sms/users/environment"
+	"github.com/Methuseli/sms/users/middleware"
+	"github.com/Methuseli/sms/users/models"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
-	routes "github.com/Methuseli/sms/routes"
+	routes "github.com/Methuseli/sms/users/routes"
 )
 
 var (

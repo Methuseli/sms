@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Methuseli/sms/environment"
+	"github.com/Methuseli/sms/users/environment"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

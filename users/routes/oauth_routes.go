@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/Methuseli/sms/controller"
+	"github.com/Methuseli/sms/users/controller"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 	"github.com/gin-gonic/gin"
 )

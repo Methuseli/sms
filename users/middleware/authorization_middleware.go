@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Methuseli/sms/database"
-	"github.com/Methuseli/sms/models"
+	"github.com/Methuseli/sms/users/database"
+	"github.com/Methuseli/sms/users/models"
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/gorm-adapter/v3"
 	"github.com/gin-gonic/gin"
