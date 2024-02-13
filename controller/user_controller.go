@@ -11,7 +11,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	Log "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/bcrypt"
 )
+
+const invalidUser = "Invalid user ID"
+const failedToRetrieveUser = "Failed to find user"
+type PasswordChange struct {
+	Password string `json:"password"`
+}
 
 func Register(context *gin.Context) {
 	var input models.User
@@ -129,7 +136,7 @@ func GetUser(context *gin.Context) {
 	id, err := uuid.Parse(userId)
 
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Invalid user ID"})
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": invalidUser})
 		return
 	}
 
@@ -142,7 +149,7 @@ func GetUser(context *gin.Context) {
 	var user models.User
 	result := database.Database.First(&user, id)
 	if result.Error != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Failed to find user"})
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": failedToRetrieveUser})
 		return
 	}
 
@@ -154,7 +161,7 @@ func EditUser(context *gin.Context) {
 	id, err := uuid.Parse(userId)
 
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Invalid user ID"})
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": invalidUser})
 		return
 	}
 
@@ -173,9 +180,53 @@ func EditUser(context *gin.Context) {
 	var user models.User
 	result := database.Database.First(&user, id)
 	if result.Error != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": failedToRetrieveUser})
+		return
+	}
+
+	if err := database.Database.Model(user).Updates(updateFields).Error; err != nil {
+		Log.Println(err)
+		// Handle error (e.g., database error)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": failedToRetrieveUser})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"status": "success", "message": "updated successfully"})
+}
+
+func ForgotPassword(context *gin.Context) {
+	userId := context.Param("id")
+
+	id, err := uuid.Parse(userId)
+
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": invalidUser})
+		return
+	}
+
+	var passwordChange PasswordChange
+	if err := context.BindJSON(&passwordChange); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Invalid JSON"})
+		return
+	}
+
+	password := passwordChange.Password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Error hashing password"})
+	}
+
+	var user models.User
+	result := database.Database.First(&user, id)
+	if result.Error != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Failed to find user"})
 		return
 	}
+
+	updateFields := map[string]interface{}{
+        "password": hashedPassword,
+    }
+	
 
 	if err := database.Database.Model(user).Updates(updateFields).Error; err != nil {
 		Log.Println(err)
@@ -183,6 +234,4 @@ func EditUser(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return
 	}
-
-	context.JSON(http.StatusOK, gin.H{"status": "success", "message": "updated successfully"})
 }

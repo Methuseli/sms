@@ -14,4 +14,5 @@ func UserRoutes(router *gin.RouterGroup, adapter *gormadapter.Adapter) {
 	users.GET("", middleware.Authorize(adapter), controller.GetAllUsers)
 	users.PATCH("/:id", middleware.Authorize(adapter), controller.EditUser)
 	users.GET("/:id", middleware.Authorize(adapter), controller.GetUser)
+	users.POST("/forgot-password/:id", controller.ForgotPassword)
 }
