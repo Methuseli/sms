@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	// Log "github.com/sirupsen/logrus"
 )
 
 type User struct {
@@ -18,7 +19,7 @@ type User struct {
 	Email       string  `gorm:"size:255;not null;unique" json:"email"`
 	Phonenumber string  `gorm:"size:255;not null;unique" json:"phonenumber"`
 	IsStudent   bool    `gorm:"default:false" json:"is_student"`
-	Role        string  `gorm:"default:'User'" json:"role"`
+	Role        string  `gorm:"default:'user'" json:"role"`
 	Provider    string  `gorm:"default: 'local'" json:"provider"`
 }
 

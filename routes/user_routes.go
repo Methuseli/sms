@@ -9,7 +9,9 @@ import (
 
 func UserRoutes(router *gin.RouterGroup, adapter *gormadapter.Adapter) {
 	users := router.Group("/users")
-	users.POST("/signup", middleware.Authorize("/api/v1/users/signup", "POST", adapter), controller.Register)
+	users.POST("/signup", middleware.Authorize(adapter), controller.Register)
 	users.POST("/login", controller.Login)
-	users.GET("", middleware.Authorize("/api/v1/users", "GET", adapter), controller.GetAllUsers)
+	users.GET("", middleware.Authorize(adapter), controller.GetAllUsers)
+	users.PATCH("/:id", middleware.Authorize(adapter), controller.EditUser)
+	users.GET("/:id", middleware.Authorize(adapter), controller.GetUser)
 }

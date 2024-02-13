@@ -40,6 +40,7 @@ func GoogleOAuth(context *gin.Context) {
 	email := strings.ToLower(googleUser.Email)
 
 	userData := models.User{
+		// Username: ,
 		Firstname: googleUser.Givenname,
 		Lastname:  googleUser.Familyname,
 		Email:     email,

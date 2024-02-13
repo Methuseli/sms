@@ -10,6 +10,7 @@ import (
 	"github.com/Methuseli/sms/utilities"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	Log "github.com/sirupsen/logrus"
 )
 
 func Register(context *gin.Context) {
@@ -92,13 +93,60 @@ func Login(context *gin.Context) {
 func GetAllUsers(context *gin.Context) {
 	var users []models.User
 
-	query := database.Database.Model(&models.User{})
+	query := database.Database.Model(&models.User{}).Find(&users)
+	// Log.Println("query ", query.Error)
 
-	if err := query.Find(&users); err != nil {
+	if query.Error != nil {
+		// Log.Println("Error", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"status": "fail", "message": "Failed to fetch users"})
 		return
 	}
 	context.JSON(http.StatusOK, users)
+}
+
+func checkUser(context *gin.Context, id string) bool {
+	requestUserId, exists := context.Get("userId")
+	if !exists {
+		return false
+	}
+	userRole, exists := context.Get("userRole")
+	if !exists {
+		return false
+	}
+
+	if requestUserId == id {
+		return true
+	} else if userRole == "admin" {
+		return true
+	} else {
+		return false
+	}
+}
+
+func GetUser(context *gin.Context) {
+	userId := context.Param("id")
+
+	id, err := uuid.Parse(userId)
+
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Invalid user ID"})
+		return
+	}
+
+	ok := checkUser(context, userId)
+	if !ok {
+		context.JSON(http.StatusForbidden, gin.H{"status": "fail", "message": "Forbidden"})
+		return
+	}
+
+	var user models.User
+	result := database.Database.First(&user, id)
+	if result.Error != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Failed to find user"})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"status": "success", "user": user})
 }
 
 func EditUser(context *gin.Context) {
@@ -110,24 +158,31 @@ func EditUser(context *gin.Context) {
 		return
 	}
 
+	ok := checkUser(context, userId)
+	if !ok {
+		context.JSON(http.StatusForbidden, gin.H{"status": "fail", "message": "Forbidden"})
+		return
+	}
+
 	var updateFields map[string]interface{}
 	if err := context.BindJSON(&updateFields); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"status":"fail", "message": "Invalid JSON"})
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Invalid JSON"})
 		return
 	}
 
 	var user models.User
 	result := database.Database.First(&user, id)
 	if result.Error != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Invalid user ID"})
+		context.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Failed to find user"})
 		return
 	}
 
 	if err := database.Database.Model(user).Updates(updateFields).Error; err != nil {
+		Log.Println(err)
 		// Handle error (e.g., database error)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return
 	}
 
-	context.JSON(http.StatusOK, gin.H{"status":"success", "user": user})
+	context.JSON(http.StatusOK, gin.H{"status": "success", "message": "updated successfully"})
 }

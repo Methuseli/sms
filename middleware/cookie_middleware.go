@@ -5,19 +5,18 @@ import (
 	"encoding/hex"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )
 
-func SessionMiddleware(c *gin.Context) {
+func SessionMiddleware(context *gin.Context) {
     // Check for session cookie
-    sessionCookie, err := c.Cookie("session")
+    sessionCookie, err := context.Cookie("session")
     if err != nil {
         // If cookie doesn't exist, create one
-        sessionCookie = CreateSessionCookie(c)
-        c.SetCookie("session", sessionCookie, 3600*24, "/", "", false, true) // Set appropriate options
+        sessionCookie = CreateSessionCookie(context)
+        context.SetCookie("session", sessionCookie, 3600*24, "/", "", false, true) // Set appropriate options
     }
 
     jwtToken, err := jwt.ParseWithClaims(sessionCookie, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -26,35 +25,18 @@ func SessionMiddleware(c *gin.Context) {
     })
 
     if err != nil || !jwtToken.Valid {
-        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "invalid session"})
+        context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "invalid session"})
         return
     }
 
-    // Check if accessing a protected endpoint
-    if IsPrivateEndpoint(c.Request.URL.Path) {
-
-        token, err := c.Cookie("token")
-        if err != nil {
-            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "error validating authentication token"})
-        }
-        authenticationToken, err := jwt.ParseWithClaims(token, &jwt.StandardClaims{}, func(accessToken *jwt.Token)(interface{}, error){
-            return []byte(os.Getenv("JWT_SECRET_KEY")), nil
-        })
-
-        if err != nil || !authenticationToken.Valid {
-            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "user not authenticated"})
-            return
-        }
-    }
-
-    c.Next()
+    context.Next()
 }
 
-func CreateSessionCookie(c *gin.Context) string {
+func CreateSessionCookie(context *gin.Context) string {
     // Generate a unique session ID or use a library
     sessionID, err := GenerateRandomSessionID()
     if err != nil {
-        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "error authentication user"})
+        context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "error authentication user"})
         return ""
     }
 
@@ -65,11 +47,11 @@ func CreateSessionCookie(c *gin.Context) string {
     return tokenString
 }
 
-func IsPrivateEndpoint(endpoint string) bool {
-    // Define your logic for determining private endpoints here
-    // For example, you can check if it starts with "/api/private"
-    return strings.HasPrefix(endpoint, "/api/v1/private")
-}
+// func IsPrivateEndpoint(endpoint string) bool {
+//     // Define your logic for determining private endpoints here
+//     // For example, you can check if it starts with "/api/private"
+//     return strings.HasPrefix(endpoint, "/api/v1/private")
+// }
 
 func GenerateRandomSessionID() (string, error) {
     // Generate random bytes
