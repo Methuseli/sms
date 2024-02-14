@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "github.com/Methuseli/sms/users/grpc";
+
+service AuthService {
+    rpc AuthorizeUser(AuthorizationRequest) returns(AuthorizationResponse) {}
+}
+
+message AuthorizationRequest {
+    string accessToken = 1;
+    string sessionToken = 2;
+}
+
+message AuthorizationResponse {
+    bool authorized = 1;
+}
+
