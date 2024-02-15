@@ -27,25 +27,27 @@ var enforcer *casbin.Enforcer
 
 var config *environment.Config
 
-
 func init() {
+	// homeDir, _ := os.UserHomeDir()
+
+    // Log.Printf(homeDir)
+
 	Log.SetFormatter(&Log.JSONFormatter{})
 	Log.SetLevel(Log.DebugLevel)
 	Log.SetOutput(os.Stdout)
 
 	config, err := environment.LoadConfig(".")
 	if err != nil {
-		Log.Fatal("🚀 Could not load environment variables", err)
+		Log.Fatal("🚀 Could not load environment variables ", err)
 	}
 
 	database.ConnectDB(&config)
 	database.Database.AutoMigrate(&models.User{})
 
-
 	adapter, err := gormadapter.NewAdapterByDB(database.Database)
-    if err != nil {
-        Log.Fatal(fmt.Sprintf("failed to initialize casbin adapter: %v", err))
-    }
+	if err != nil {
+		Log.Fatal(fmt.Sprintf("failed to initialize casbin adapter: %v", err))
+	}
 
 	server = gin.New()
 	server.Use(gin.LoggerWithWriter(Log.New().Writer()), gin.Recovery())
@@ -57,7 +59,7 @@ func init() {
 	server.Use(cors.New(corsConfig))
 	server.Use(middleware.SessionMiddleware)
 
-	router := server.Group("/api/v1")
+	router := server.Group("/user-service/api/v1")
 	defaultRouter := server.Group("")
 
 	routes.DefaultRoutes(router)
