@@ -1,0 +1,55 @@
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sms-ingress
+  labels:
+    name: sms-ingress
+  # annotations:
+  #   nginx.ingress.kubernetes.io/configuration-snippet: |
+  #     location ~* "/static/" {
+  #       alias /staticfiles/;
+  #     }
+  #     location ~* "/media/" {
+  #       alias /media/;
+  #     }
+  #     location / {
+  #       include /etc/nginx/html/uwsgi_params;
+  #       uwsgi_params /code;
+  #     }
+  #   cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  # tls:
+  # - hosts:
+  #   - localhost
+  #   secretName: secret-tls
+  rules:
+  - host: localhost
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/user-service"
+        backend:
+          service:
+            name: users
+            port: 
+              number: 8080
+
+      # - pathType: Prefix
+      #   path: "/*"
+      #   backend:
+      #     service:
+      #       name: masca-backend
+      #       port: 
+      #         number: 8000
+
+      # - pathType: Prefix
+      #   path: "/*"
+      #   backend:
+      #     service:
+      #       name: masca-admin-backend
+      #       port: 
+      #         number: 8000

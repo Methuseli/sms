@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: users
+  labels:
+    app: users
+spec:
+  # type: LoadBalancer
+  selector:
+    app: users
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+      name: http
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users
+  labels:
+    app: users
+spec:
+  # replicas: 3
+  selector:
+    matchLabels: 
+      app: users
+  template:
+    metadata:
+      labels:
+        app: users
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: sms-users
+        image: user-service
+        imagePullPolicy: IfNotPresent
+        # command: ["/bin/sh", "-c"]
+        # envFrom:
+        # - configMapRef:
+        #     name: sms-config
+        # - secretRef:
+        #     name: sms-secrets
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+          requests:
+            cpu: "0.5"
+            memory: "256Mi"
+
+---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: sms-config
+# data:
+#   PORT: "8080"
+#   CLIENT_ORIGIN: "http://localhost:3000"
+#   TTL: "2000"
+#   GOOGLE_REDIRECT_UR: "http://localhost:8080/oauth2/callback/google"
+
+
+# ---
+# apiVersion: batch/v1
+# kind: Job
+# metadata:
+#   name: masca-migrations
+# spec:
+#   template:
+#     spec:
+#       containers:
+#       - name: masca-migrations
+#         image: masca-backend_web
+#         imagePullPolicy: IfNotPresent
+#         command: ["python",  "manage.py", "migrate"]
+#         envFrom:
+#         - secretRef:
+#             name: masca-secret
+#       restartPolicy: Never
+#   backoffLimit: 5
